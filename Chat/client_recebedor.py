@@ -1,8 +1,7 @@
 import socket
 from time import sleep
 
-# Configurações (Devem ser iguais às do servidor)
-HOST = '127.0.0.1' # Se for jogar no mesmo PC. Se for em rede, use o IP do PC onde o servidor está rodando.
+HOST = '127.0.0.1'
 PORT = 5000
 
 def iniciar_cliente():
