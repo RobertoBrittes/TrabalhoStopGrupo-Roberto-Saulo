@@ -55,20 +55,27 @@ def consumir():
     return mensagem
 
 def thread_produtora(conn, addr):
-    # Inclui mensagens na fila
+    #recebe o nome do usuario e caso receber em branco ele fecha a conexao por que significa que o cliente saiu
     nome_usuario = conn.recv(1024).decode()
     if not nome_usuario:
         conn.close()
         return
     
     while True:
+        #recebe a mensagem do cliente
         msg_produzida = conn.recv(1024).decode()
+        
+        #caso for vazia fecha a conexao pelo mesmo motivo anterior
         if not msg_produzida: break
         
+        #pega o horario de agora e formata no formato correto
         agora = datetime.now()
         hora_formatada = agora.strftime("%H:%M:%S")
+        
+        #monta a mensagem final e chama o metodo que coloca ela na fila
         msg_final = f"[{nome_usuario} {addr[0]} {hora_formatada}]\n {msg_produzida}\n"
         produzir(msg_final)
+        
         print("Mensagem enviada com sucesso!")
         sleep(1)
     
@@ -79,8 +86,12 @@ def thread_distribuidora():
     
     # Retira mensagens da fila
     while True:
+        #pega a proxima mensagem da fila
         msg_da_fila = consumir()
+        
+        #envia a mensagem para cada cliente consumidor conectado
         for cliente_conn in clientes_consumidores:
+            # tenta enviar para o cliente e caso tiver dado algum erro, como o cliente ter saido, ele tira o cliente da lista de conexoes
             try:
                 cliente_conn.sendall(msg_da_fila.encode())
             except (BrokenPipeError, ConnectionResetError):
@@ -101,9 +112,13 @@ def iniciar_servidor():
         threading.Thread(target=thread_distribuidora, daemon=True).start()
         
         while True:
+            #espera uma conexao
             conn, addr = server.accept()
             print(f"Usuário do IP: {addr[0]} se conectou")
+            # recebe qual o tipo do cliente
             tipoClient = conn.recv(1024).decode()
+            
+            #verifica qual eh o tipo de cliente e faz a devida logica de cada um
             if tipoClient == "TIPO:PRODUTOR":
                 print("Client identificado como produtor!")
                 thread = threading.Thread(target=thread_produtora, args=(conn, addr))

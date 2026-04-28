@@ -3,33 +3,36 @@ import socket
 # Configurações (Devem ser iguais às do servidor)
 HOST = '127.0.0.1' # Se for jogar no mesmo PC. Se for em rede, use o IP do PC onde o servidor está rodando.
 PORT = 9002
+N_RODADAS = 0
 
 def iniciar_cliente():
     
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
         cliente.connect((HOST, PORT))
 
+        N_RODADAS = int(cliente.recv(1024).decode())
+        
         print("="*30)
         print("      BEM-VINDO AO STOP!      ")
         print("="*30)
 
+        # pede o nome e envia ao servidor
         nome = input("Digite seu nome para entrar na partida: ")
         cliente.sendall(nome.encode())
         print("\nAguardando os outros jogadores se conectarem...\n")
 
-        for r in range(3):
+        
+        for r in range(N_RODADAS):
             
+            #Fica bloqueado no recv aguardando o servidor sortear a letra
             letra_sorteada = cliente.recv(1024).decode()
-            if not letra_sorteada:
-                break
                 
             print("="*30)
             print(f"RODADA {r+1} - A LETRA É: >>> {letra_sorteada} <<<")
             print("="*30)
             
-            print(f"Atenção: Suas respostas devem começar com a letra '{letra_sorteada}'!\n")
-            
-            resp_nome = input("1. Nome/Tema: ")
+            # jogador insere as respostas
+            resp_nome = input("1. Nome: ")
             resp_animal = input("2. Animal: ")
             resp_cor = input("3. Cor: ")
             resp_alimento = input("4. Alimento: ")
@@ -38,20 +41,25 @@ def iniciar_cliente():
             resp_corpo = input("7. Parte do Corpo: ")
             resp_marca = input("8. Marca: ")
             
+            #formata todas as respostas em uma única string usando '/' para delimitar cade resposta
             respostas_juntas = f"{resp_nome}/{resp_animal}/{resp_cor}/{resp_alimento}/{resp_profissao}/{resp_time}/{resp_corpo}/{resp_marca}"
             
+            #envia as respostas para o servidor
             cliente.sendall(respostas_juntas.encode())
             print("\nRespostas enviadas! Aguardando os outros jogadores terminarem...")
             
+            #recebe o placar parcial e imprime
             placar_parcial = cliente.recv(4096).decode()
             print(placar_parcial)
-            
+        
+        #recebe o resultado final e imprime
         print("\nCalculando o resultado final...")
         resultado_final = cliente.recv(4096).decode()
         print(resultado_final)
         
+        # fecha a conexao
         cliente.close()
-        input("\nPressione ENTER para sair.")
+        input("\nPressione enter para sair.")
 
 if __name__ == "__main__":
     iniciar_cliente()

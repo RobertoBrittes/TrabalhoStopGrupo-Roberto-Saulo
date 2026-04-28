@@ -17,19 +17,25 @@ def iniciar_cliente():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as cliente:
         cliente.connect((HOST, PORT))
         
+        #envia para o servidor qual o seu tipo
         cliente.sendall("TIPO:PRODUTOR".encode())
         
         print("="*30)
         print("      BEM-VINDO AO CHAT!      ")
         print("="*30)
         
+        #armazena o nome do usuario e envia para o servidor
         nome = input("Qual seu nome: ")
         cliente.sendall(nome.encode())
         
+        # entra em um loop infinito de envio de mensagens
         while True:
+            #recebe a mensagem
             mensagem = input("Mensagem: ")
+            #envia a mensagem para o servidor
             cliente.sendall(mensagem.encode())
             sleep(0.5)
+            # limpa o terminal
             limpar_terminal()
 
 if __name__ == "__main__":
